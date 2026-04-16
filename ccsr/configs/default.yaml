@@ -1,0 +1,66 @@
+data:
+  dataset_name: "leduckhai/Sentiment-Reasoning"
+  text_column: "text_en"
+  rationale_column: "human_justification_en"
+  label_column: "label"
+  label_map:
+    negative: 0
+    neutral: 1
+    positive: 2
+  max_seq_length: 512
+
+model:
+  backbone: "meta-llama/Meta-Llama-3-8B-Instruct"
+  lora_r: 16
+  lora_alpha: 32
+  lora_target_modules: "all-linear"
+  torch_dtype: "bfloat16"
+
+contrastive:
+  enabled: true
+  projection_hidden_dim: 256
+  projection_output_dim: 128
+  temperature: 0.07
+  lambda_con: 0.3
+  sub_cluster_alpha: 0.1
+  sub_cluster_threshold: 0.85
+
+focal_loss:
+  enabled: true
+  gamma: 2.0
+  lambda_bal: 0.5
+
+curriculum:
+  enabled: true
+  uncertainty_weight: 0.6
+  mismatch_weight: 0.4
+  phase1_threshold: 0.4
+  phase1_epochs: [1, 2]
+  phase2_threshold: 0.7
+  phase2_epochs: [3, 4]
+  phase3_epochs: [5, 6, 7]
+  class_balanced_phase3: true
+
+training:
+  num_epochs: 7
+  per_device_batch_size: 8
+  gradient_accumulation_steps: 4  # effective batch = 32 per GPU
+  learning_rate: 2.0e-4
+  warmup_ratio: 0.05
+  lr_scheduler_type: "cosine"
+  weight_decay: 0.01
+  early_stopping_patience: 2
+  eval_strategy: "epoch"
+  save_strategy: "epoch"
+  metric_for_best_model: "macro_f1"
+  seeds: [42, 123, 456]
+
+evaluation:
+  faithfulness_model: "microsoft/deberta-v3-base-mnli-fever-anli"
+  bert_score_model: "microsoft/deberta-xlarge-mnli"
+
+difficulty:
+  bert_model: "bert-base-uncased"
+  bert_epochs: 3
+  bert_batch_size: 64
+  bert_lr: 2.0e-5
